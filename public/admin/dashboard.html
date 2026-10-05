@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>এডমিন প্যানেল — Room Manager</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+.role-tag{display:inline-block;font-size:10px;padding:1px 8px;border-radius:999px;background:var(--gold);color:#fff;margin-right:4px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(38,36,32,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.modal{background:var(--card);border-radius:12px;padding:22px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);}
+.perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;font-size:12.5px;background:#FBF8EF;border:1px solid var(--paper-line);border-radius:8px;padding:10px 12px;}
+.perm-grid label{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:12.5px;margin:0;}
+.perm-grid input{width:auto;}
+.badge.manager{background:#DCE6F5;color:#2E5A9C;}
+.badge.customer{background:#EAE6DA;color:var(--ink-soft);}
+.daytable td select{font-size:12px;padding:5px 6px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar">
+    <div class="logo">RM</div>
+    <div class="nav-item active" data-sec="overview">🏠<span class="label">হোম</span></div>
+    <div class="nav-item" data-sec="users">👥<span class="label">ইউজার</span></div>
+    <div class="nav-item" data-sec="rent">৳<span class="label">ভাড়া</span></div>
+    <div class="nav-item" data-sec="market">🛒<span class="label">বাজার</span></div>
+    <div class="nav-item" data-sec="cooking">🍳<span class="label">রান্না</span></div>
+    <div class="nav-item" data-sec="trash">🗑️<span class="label">ময়লা</span></div>
+    <div class="nav-item" data-sec="cleaning">🧹<span class="label">ক্লিন</span></div>
+    <div class="nav-item" data-sec="notify">🔔<span class="label">মেসেজ</span></div>
+    <div class="nav-item" data-sec="chat">💬<span class="label">চ্যাট</span></div>
+    <div class="nav-item" data-sec="settings" data-admin-only="1">⚙️<span class="label">সেটিংস</span></div>
+    <a href="../about.html" class="nav-item" style="text-decoration:none; margin-top:auto;">ℹ️<span class="label">About</span></a>
+    <a href="../developer.html" class="nav-item" style="text-decoration:none;">👨‍💻<span class="label">ডেভেলপার</span></a>
+    <div class="nav-item" id="logoutBtn">🚪<span class="label">লগআউট</span></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">হোম</h1>
+      <div class="who"><span class="role-tag" id="roleTag">এডমিন</span>স্বাগতম, <b id="adminName">এডমিন</b></div>
+    </div>
+
+    <section id="sec-overview">
+      <div class="grid cols-3" id="statCards"></div>
+      <div class="card">
+        <h2>আজকের সব ডিউটি</h2>
+        <table><thead><tr><th>দায়িত্ব</th><th>নাম</th><th>রুম</th><th>স্ট্যাটাস</th></tr></thead>
+          <tbody id="todayDutyBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-users" style="display:none;">
+      <div class="card">
+        <div class="row between"><h2>ইউজার তালিকা (গ্রাহক ও ম্যানেজার)</h2><button class="btn" id="addUserBtn">+ নতুন ইউজার</button></div>
+        <table><thead><tr><th>আইডি</th><th>নাম</th><th>ভূমিকা</th><th>রুম</th><th>ফোন</th><th>ভাড়া</th><th>স্ট্যাটাস</th><th></th></tr></thead>
+          <tbody id="usersBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-rent" style="display:none;">
+      <div class="card">
+        <div class="row between">
+          <h2>মাসিক ভাড়ার হিসাব</h2>
+          <div class="row"><select id="rentMonth"></select><select id="rentYear"></select></div>
+        </div>
+        <table><thead><tr><th>আইডি</th><th>নাম</th><th>নির্ধারিত</th><th>জমা</th><th>বাকি</th><th>স্ট্যাটাস</th><th>আপডেট</th></tr></thead>
+          <tbody id="rentBody"></tbody></table>
+      </div>
+      <div class="card">
+        <h2>সর্বমোট বকেয়ার তালিকা</h2>
+        <table><thead><tr><th>আইডি</th><th>নাম</th><th>মাস</th><th>বকেয়া</th><th></th></tr></thead>
+          <tbody id="dueListBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-market" style="display:none;"></section>
+    <section id="sec-cooking" style="display:none;"></section>
+    <section id="sec-trash" style="display:none;"></section>
+    <section id="sec-cleaning" style="display:none;"></section>
+
+    <section id="sec-notify" style="display:none;">
+      <div class="card">
+        <h2>কাস্টম মেসেজ পাঠান</h2>
+        <div class="field"><label>প্রাপক</label>
+          <select id="notifyTarget"><option value="all">সবাইকে</option></select>
+        </div>
+        <div class="field"><label>মেসেজ</label><textarea id="notifyMsg" rows="4" placeholder="আপনার মেসেজ লিখুন..."></textarea></div>
+        <button class="btn" id="sendNotifyBtn">WhatsApp এ পাঠান</button>
+      </div>
+      <div class="card">
+        <h2>নোটিফিকেশন হিস্ট্রি</h2>
+        <table><thead><tr><th>নাম</th><th>ধরন</th><th>মেসেজ</th><th>স্ট্যাটাস</th><th>সময়</th></tr></thead>
+          <tbody id="notifyLogBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-chat" style="display:none;">
+      <div class="card">
+        <div class="tabs">
+          <div class="tab active" data-chat="group">গ্রুপ চ্যাট</div>
+          <div class="tab" data-chat="private">প্রাইভেট মেসেজ</div>
+        </div>
+        <select id="privateTargetSelect" style="display:none; margin-bottom:12px; max-width:260px;"></select>
+        <div class="chat-window" id="chatWindow"></div>
+        <div class="row" style="margin-top:12px;">
+          <input type="text" id="chatInput" placeholder="মেসেজ লিখুন...">
+          <label class="btn secondary" style="cursor:pointer;">📷<input type="file" id="chatImage" accept="image/*" style="display:none;"></label>
+          <button class="btn secondary" id="micBtn" type="button">🎤</button>
+          <button class="btn" id="chatSendBtn">পাঠান</button>
+        </div>
+        <div id="recordingIndicator" style="display:none; margin-top:8px; padding:8px 12px; background:var(--clay-bg); border-radius:8px; color:var(--rule); font-size:13px; font-weight:600;">
+          🔴 রেকর্ড হচ্ছে... <span id="recordSeconds">0</span>s — আবার মাইক বাটনে চাপুন পাঠাতে
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-settings" style="display:none;">
+      <div class="card">
+        <h2>WhatsApp API সেটিংস (Meta Cloud API)</h2>
+        <div class="grid cols-2">
+          <div class="field"><label>Phone Number ID</label><input id="set_phone_id"></div>
+          <div class="field"><label>Business Account ID</label><input id="set_biz_id"></div>
+        </div>
+        <div class="field"><label>Access Token</label><input id="set_token" placeholder="নতুন টোকেন বসাতে চাইলে এখানে লিখুন"></div>
+        <button class="btn" id="saveApiBtn">সংরক্ষণ করুন</button>
+
+        <div style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--paper-line);">
+          <label style="font-size:13px; font-weight:600;">🧪 টেস্ট মেসেজ পাঠান</label>
+          <p style="font-size:12px;color:var(--ink-soft);margin:2px 0 8px;">উপরের সেটিংস সংরক্ষণ করার পর, নিচে একটা নম্বর দিয়ে টেস্ট করুন — Meta থেকে আসা আসল রেসপন্স/এরর সরাসরি দেখাবে।</p>
+          <div class="row">
+            <input id="testWaPhone" placeholder="01712345678">
+            <button class="btn secondary" id="testWaBtn">টেস্ট পাঠান</button>
+          </div>
+          <div id="testWaResult" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:12.5px; white-space:pre-wrap; word-break:break-word;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🔗 Webhook Callback URL (Meta App Dashboard এ বসাতে হবে)</h2>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:-6px;">Meta App Dashboard → WhatsApp → Configuration → Webhook এ গিয়ে নিচের দুটো মান বসিয়ে "Verify and Save" চাপুন, তারপর "messages" ফিল্ডে Subscribe করুন।</p>
+        <div class="field"><label>Callback URL</label>
+          <div class="row"><input id="webhookUrlDisplay" readonly><button class="btn secondary" onclick="copyField('webhookUrlDisplay')">কপি</button></div>
+        </div>
+        <div class="field"><label>Verify Token</label>
+          <div class="row"><input id="set_webhook_token"><button class="btn secondary" onclick="copyField('set_webhook_token')">কপি</button></div>
+        </div>
+        <button class="btn" id="saveWebhookBtn">Verify Token সংরক্ষণ করুন</button>
+      </div>
+      <div class="card">
+        <h2>নোটিফিকেশনের সময় (দৈনিক ৩ বার)</h2>
+        <div class="grid cols-3">
+          <div class="field"><label>১ম বার</label><input type="time" id="set_time1"></div>
+          <div class="field"><label>২য় বার</label><input type="time" id="set_time2"></div>
+          <div class="field"><label>৩য় বার</label><input type="time" id="set_time3"></div>
+        </div>
+        <button class="btn" id="saveTimesBtn">সময় সংরক্ষণ করুন</button>
+      </div>
+      <div class="card">
+        <h2>🕒 সময় ও টাইমজোন</h2>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:-6px;">এখানে যে টাইমজোন সেট করবেন, পুরো সিস্টেম (নোটিফিকেশনের সময়, তারিখ, cron শিডিউল) সেই টাইমজোন অনুযায়ী চলবে।</p>
+        <div class="field">
+          <label>টাইমজোন</label>
+          <select id="set_timezone">
+            <option value="Asia/Dhaka">Asia/Dhaka (বাংলাদেশ, GMT+6)</option>
+            <option value="Asia/Kolkata">Asia/Kolkata (ভারত, GMT+5:30)</option>
+            <option value="Asia/Karachi">Asia/Karachi (পাকিস্তান, GMT+5)</option>
+            <option value="Asia/Kathmandu">Asia/Kathmandu (নেপাল, GMT+5:45)</option>
+            <option value="Asia/Yangon">Asia/Yangon (মায়ানমার, GMT+6:30)</option>
+            <option value="Asia/Dubai">Asia/Dubai (UAE, GMT+4)</option>
+            <option value="Asia/Riyadh">Asia/Riyadh (সৌদি আরব, GMT+3)</option>
+            <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (মালয়েশিয়া, GMT+8)</option>
+            <option value="Asia/Singapore">Asia/Singapore (সিঙ্গাপুর, GMT+8)</option>
+            <option value="Europe/London">Europe/London (যুক্তরাজ্য)</option>
+            <option value="America/New_York">America/New_York (যুক্তরাষ্ট্র - পূর্ব)</option>
+            <option value="UTC">UTC (Coordinated Universal Time)</option>
+            <option value="__custom__">অন্য কোনো টাইমজোন (নিচে লিখুন)</option>
+          </select>
+        </div>
+        <div class="field" id="customTzWrap" style="display:none;">
+          <label>কাস্টম টাইমজোন (IANA ফরম্যাট, যেমন: Asia/Dhaka)</label>
+          <input id="set_timezone_custom" placeholder="Asia/Dhaka">
+        </div>
+        <div class="row between" style="align-items:center;">
+          <div style="font-size:13px; color:var(--ink-soft);">এই মুহূর্তে নির্বাচিত টাইমজোনে সময়: <b id="tzPreview" style="color:var(--ink);">--:--:--</b></div>
+          <button class="btn" id="saveTimezoneBtn">টাইমজোন সংরক্ষণ করুন</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 সিস্টেম শুরুর তারিখ</h2>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:-6px;">এখানে যে মাস/বছর সেট করবেন, সেটাই হবে সবচেয়ে পুরনো মাস — ভাড়া ও ডিউটির মাস/সাল ড্রপডাউনে এর আগের কোনো মাস দেখানো হবে না।</p>
+        <div class="grid cols-2">
+          <div class="field"><label>শুরুর মাস</label>
+            <select id="set_start_month"></select>
+          </div>
+          <div class="field"><label>শুরুর বছর</label><input type="number" id="set_start_year" min="2000" max="2100"></div>
+        </div>
+        <button class="btn" id="saveStartDateBtn">সংরক্ষণ করুন</button>
+      </div>
+
+      <div class="card">
+        <h2>🛠️ মেইনটেন্যান্স (শুধু এডমিন)</h2>
+        <div class="field">
+          <label>এই মাসের ভাড়ার বকেয়া এখনই সবার জন্য তৈরি করুন</label>
+          <p style="font-size:12px;color:var(--ink-soft);margin:2px 0 8px;">এটা প্রতি মাসের ১ তারিখে স্বয়ংক্রিয়ভাবে হয় (cron সেটআপ থাকলে), তবে এখনই ম্যানুয়ালি চালাতে চাইলে এই বাটন চাপুন। আগে থেকে থাকা এন্ট্রি নষ্ট হবে না।</p>
+          <button class="btn secondary" id="generateRentBtn">এই মাসের বকেয়া তৈরি করুন</button>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>নোটিফিকেশন হিস্ট্রি</label>
+          <p style="font-size:12px;color:var(--ink-soft);margin:2px 0 8px;">সব নোটিফিকেশন লগ (ভাড়া/ডিউটি রিমাইন্ডার, কাস্টম মেসেজ ইতিহাস) স্থায়ীভাবে মুছে যাবে।</p>
+          <button class="btn secondary" id="clearNotifyBtn" style="border-color:var(--clay); color:var(--clay);">🗑️ নোটিফিকেশন হিস্ট্রি ক্লিয়ার করুন</button>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>সার্ভার ক্যাশ</label>
+          <p style="font-size:12px;color:var(--ink-soft);margin:2px 0 8px;">কোড আপডেট করার পরও পুরনো আচরণ দেখালে (PHP OPcache এর কারণে হতে পারে) এটা চাপুন।</p>
+          <button class="btn secondary" id="clearCacheBtn">🧹 সার্ভার ক্যাশ ক্লিয়ার করুন</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============ ইউজার তৈরি/সম্পাদনা মডাল ============ -->
+<div id="userModalOverlay" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h2 id="userModalTitle">নতুন ইউজার</h2>
+    <div class="field"><label>ভূমিকা</label>
+      <select id="um_role" onchange="toggleUmPerm()">
+        <option value="customer">গ্রাহক (Customer)</option>
+        <option value="manager">ম্যানেজার (Manager)</option>
+      </select>
+    </div>
+    <div class="grid cols-2">
+      <div class="field"><label>নাম</label><input id="um_name"></div>
+      <div class="field" id="um_roomWrap"><label>রুম নম্বর</label><input id="um_room"></div>
+      <div class="field"><label>ফোন</label><input id="um_phone"></div>
+      <div class="field"><label>WhatsApp নম্বর</label><input id="um_whatsapp"></div>
+      <div class="field" id="um_rentWrap"><label>মাসিক ভাড়া</label><input id="um_rent" type="number"></div>
+      <div class="field"><label>পাসওয়ার্ড</label><input id="um_password" type="text" placeholder="খালি রাখলে অপরিবর্তিত থাকবে"></div>
+    </div>
+    <div class="field" id="um_permWrap">
+      <label>কোন অপশনগুলো এই গ্রাহক দেখতে পারবে</label>
+      <div class="perm-grid">
+        <label><input type="checkbox" value="market" class="um_perm"> 🛒 বাজার</label>
+        <label><input type="checkbox" value="cooking" class="um_perm"> 🍳 রান্না</label>
+        <label><input type="checkbox" value="trash" class="um_perm"> 🗑️ ময়লা ফেলা</label>
+        <label><input type="checkbox" value="cleaning" class="um_perm"> 🧹 রুম ক্লিন</label>
+        <label><input type="checkbox" value="chat" class="um_perm"> 💬 চ্যাট</label>
+      </div>
+    </div>
+    <div class="field"><label>স্ট্যাটাস</label>
+      <select id="um_status"><option value="active">সক্রিয়</option><option value="inactive">নিষ্ক্রিয়</option></select>
+    </div>
+    <div class="row" style="justify-content:flex-end; margin-top:8px;">
+      <button class="btn secondary" onclick="closeUserModal()">বাতিল</button>
+      <button class="btn" onclick="saveUserModal()">সংরক্ষণ করুন</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js?v20260726"></script>
+<script>
+setTimeout(function () {
+  if (typeof monthYearBounds !== 'function') {
+    document.body.innerHTML = '<div style="max-width:600px;margin:60px auto;padding:24px;background:#F5E4DE;border:2px solid #B4443A;border-radius:10px;font-family:sans-serif;color:#262420;">' +
+      '<h2 style="color:#B4443A;margin-top:0;">⚠️ assets/app.js পুরনো/আপডেট হয়নি</h2>' +
+      '<p>এই পেজের কোড নতুন, কিন্তু <code>assets/app.js</code> ফাইলটা এখনো পুরনো ভার্সন হিসেবে লোড হচ্ছে (ব্রাউজার বা সার্ভার ক্যাশের কারণে হতে পারে)।</p>' +
+      '<p><b>করণীয়:</b></p><ol>' +
+      '<li>cPanel File Manager দিয়ে <code>public/assets/app.js</code> ফাইলটা আবার আপলোড করে প্রতিস্থাপন করুন</li>' +
+      '<li>হোস্টিং-এ Cloudflare/CDN বা ক্যাশিং প্লাগইন থাকলে সেটার ক্যাশ পার্জ (Purge Cache) করুন</li>' +
+      '<li>ব্রাউজারে Incognito/Private উইন্ডোতে খুলে দেখুন (ব্রাউজার ক্যাশ এড়িয়ে যায়)</li>' +
+      '</ol></div>';
+  }
+}, 300);
+</script>
+<script>
+const user = requireRole(['admin', 'manager']);
+if (user) {
+  document.getElementById('adminName').textContent = user.name;
+  document.getElementById('roleTag').textContent = user.role === 'admin' ? 'এডমিন' : 'ম্যানেজার';
+  document.querySelectorAll('.nav-item[data-admin-only]').forEach(el => {
+    el.style.display = user.role === 'admin' ? '' : 'none';
+  });
+}
+
+const titles = { overview:'হোম', users:'ইউজার', rent:'ভাড়ার হিসাব', market:'বাজার করা', cooking:'রান্না করা', trash:'ময়লা ফেলা', cleaning:'রুম ক্লিন করা', notify:'নোটিফিকেশন', chat:'চ্যাট', settings:'সেটিংস' };
+document.querySelectorAll('.nav-item[data-sec]').forEach(item => {
+  item.addEventListener('click', () => {
+    if (item.style.display === 'none') return;
+    document.querySelectorAll('.nav-item[data-sec]').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    Object.keys(titles).forEach(s => document.getElementById('sec-'+s).style.display = 'none');
+    const sec = item.dataset.sec;
+    document.getElementById('sec-'+sec).style.display = 'block';
+    document.getElementById('pageTitle').textContent = titles[sec];
+    loadSection(sec);
+  });
+});
+document.getElementById('logoutBtn').addEventListener('click', logout);
+
+let allUsers = [];
+let usersById = {};
+async function loadUsersCache() {
+  const res = await api('users.php');
+  if (res.success) allUsers = res.data.filter(u => u.role === 'customer');
+  return allUsers;
+}
+function getManagers() { return []; } // ম্যানেজার তালিকা দরকার হলে users.php থেকে role filter করা যাবে
+
+function loadSection(sec) {
+  if (sec === 'overview') loadOverview();
+  if (sec === 'users') loadUsers();
+  if (sec === 'rent') loadRent();
+  if (DUTY_TYPES.includes(sec)) renderDutyManage(sec);
+  if (sec === 'notify') loadNotify();
+  if (sec === 'chat') loadChat('group');
+  if (sec === 'settings') loadSettings();
+}
+
+// ---- OVERVIEW ----
+async function loadOverview() {
+  await loadUsersCache();
+  const today = new Date().toISOString().slice(0,10);
+  const duties = await api('duties.php?action=by-date&date=' + today);
+  const dueList = await api('rent.php?action=due-list');
+
+  const totalDue = (dueList.data || []).reduce((s, d) => s + Number(d.due_amount), 0);
+  document.getElementById('statCards').innerHTML = `
+    <div class="stat"><div class="num">${allUsers.length}</div><div class="lbl">মোট গ্রাহক</div></div>
+    <div class="stat"><div class="num">${(duties.data||[]).length}</div><div class="lbl">আজকের ডিউটি</div></div>
+    <div class="stat"><div class="num">৳${fmtMoney(totalDue)}</div><div class="lbl">সর্বমোট বকেয়া</div></div>
+  `;
+  document.getElementById('todayDutyBody').innerHTML = (duties.data||[]).map(d => `
+    <tr><td>${DUTY_ICONS[d.duty_type]} ${DUTY_LABELS[d.duty_type]}</td><td>${d.name} (${d.user_code})</td><td>${d.room_no||'-'}</td>
+    <td><span class="badge ${d.status}">${STATUS_LABELS[d.status]}</span></td></tr>`).join('') || '<tr><td colspan="4" class="empty">আজ কোনো ডিউটি সেট করা নেই</td></tr>';
+}
+
+// ---- USERS (মডাল ভিত্তিক, রোল ও পারমিশনসহ) ----
+async function loadUsers() {
+  const res = await api('users.php');
+  const rows = (res.data || []).filter(u => u.role !== 'admin');
+  usersById = {};
+  rows.forEach(u => { usersById[u.id] = u; });
+  document.getElementById('usersBody').innerHTML = rows.map(u => `
+    <tr><td>${u.user_code}</td><td>${escapeHtml(u.name)}</td>
+    <td><span class="badge ${u.role==='manager'?'manager':'customer'}">${u.role==='manager'?'ম্যানেজার':'গ্রাহক'}</span></td>
+    <td>${u.room_no||'-'}</td><td>${u.phone}</td>
+    <td>${u.role==='customer' ? '৳'+fmtMoney(u.monthly_rent) : '-'}</td>
+    <td><span class="badge ${u.status==='active'?'paid':'due'}">${u.status==='active'?'সক্রিয়':'নিষ্ক্রিয়'}</span></td>
+    <td>${(user.role === 'manager' && u.role === 'manager') ? '<span style="color:var(--ink-soft); font-size:12px;">অনুমতি নেই</span>' : `<button class="btn secondary" onclick="openUserModal('edit', usersById[${u.id}])">সম্পাদনা</button>`}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">কোনো ইউজার নেই</td></tr>';
+  allUsers = rows.filter(u => u.role === 'customer');
+}
+
+let umMode = 'add', umEditUser = null;
+function toggleUmPerm() {
+  const isManager = document.getElementById('um_role').value === 'manager';
+  document.getElementById('um_permWrap').style.display = isManager ? 'none' : 'block';
+  document.getElementById('um_roomWrap').style.display = isManager ? 'none' : 'block';
+  document.getElementById('um_rentWrap').style.display = isManager ? 'none' : 'block';
+}
+function openUserModal(mode, u) {
+  umMode = mode; umEditUser = u || null;
+  // ম্যানেজার শুধু গ্রাহক তৈরি/এডিট করতে পারবে — তাই "ম্যানেজার" অপশন ও নিজে ছাড়া
+  // এডমিন/ম্যানেজারদের এডিট বাটন লুকানো হয় (ব্যাকএন্ডও একই নিয়ম প্রয়োগ করে)
+  const roleSelect = document.getElementById('um_role');
+  const managerOption = roleSelect.querySelector('option[value="manager"]');
+  if (managerOption) managerOption.style.display = user.role === 'manager' ? 'none' : '';
+  document.getElementById('userModalTitle').textContent = mode === 'add' ? 'নতুন ইউজার' : 'ইউজার সম্পাদনা';
+  document.getElementById('um_password').value = '';
+  if (mode === 'edit') {
+    document.getElementById('um_role').value = u.role;
+    document.getElementById('um_name').value = u.name;
+    document.getElementById('um_room').value = u.room_no || '';
+    document.getElementById('um_phone').value = u.phone;
+    document.getElementById('um_whatsapp').value = u.whatsapp_number;
+    document.getElementById('um_rent').value = u.monthly_rent || 0;
+    document.getElementById('um_status').value = u.status;
+    document.querySelectorAll('.um_perm').forEach(cb => cb.checked = (u.permissions||[]).includes(cb.value));
+  } else {
+    document.getElementById('um_role').value = 'customer';
+    document.getElementById('um_name').value = '';
+    document.getElementById('um_room').value = '';
+    document.getElementById('um_phone').value = '';
+    document.getElementById('um_whatsapp').value = '';
+    document.getElementById('um_rent').value = 6000;
+    document.getElementById('um_status').value = 'active';
+    document.querySelectorAll('.um_perm').forEach(cb => cb.checked = true);
+  }
+  toggleUmPerm();
+  document.getElementById('userModalOverlay').style.display = 'flex';
+}
+function closeUserModal() { document.getElementById('userModalOverlay').style.display = 'none'; }
+
+document.getElementById('addUserBtn').addEventListener('click', () => openUserModal('add'));
+
+async function saveUserModal() {
+  const role = document.getElementById('um_role').value;
+  const name = document.getElementById('um_name').value.trim();
+  if (!name) { toast('নাম দিন'); return; }
+  const body = {
+    role,
+    name,
+    phone: document.getElementById('um_phone').value.trim(),
+    whatsapp_number: document.getElementById('um_whatsapp').value.trim(),
+    room_no: document.getElementById('um_room').value.trim(),
+    monthly_rent: Number(document.getElementById('um_rent').value) || 0,
+    status: document.getElementById('um_status').value,
+    permissions: Array.from(document.querySelectorAll('.um_perm')).filter(cb => cb.checked).map(cb => cb.value),
+  };
+  const password = document.getElementById('um_password').value;
+  if (password) body.password = password;
+
+  let res;
+  if (umMode === 'add') {
+    if (!password) { toast('নতুন ইউজারের জন্য পাসওয়ার্ড দিন'); return; }
+    res = await api('users.php', { method: 'POST', body });
+  } else {
+    res = await api('users.php?id=' + umEditUser.id, { method: 'PUT', body });
+  }
+  toast(res.message);
+  if (res.success) { closeUserModal(); loadUsers(); }
+}
+
+// ---- RENT ----
+let systemStart = null;
+getSystemStartDate().then(s => { systemStart = s; });
+
+function getRentBounds() { return monthYearBounds(0, 3, systemStart?.year, systemStart?.month); } // ভাড়া শুধু বর্তমান মাস পর্যন্ত, ভবিষ্যতে না
+function fillMonthYearSelectors() {
+  const ms = document.getElementById('rentMonth'), ys = document.getElementById('rentYear');
+  if (ms.children.length) return;
+  const b = getRentBounds();
+  b.monthOptionsFor(b.maxYear).forEach(m => { ms.innerHTML += `<option value="${m}">${BN_MONTHS[m]}</option>`; });
+  b.yearOptions().forEach(y => { ys.innerHTML += `<option value="${y}">${y}</option>`; });
+  ms.value = b.maxMonth; ys.value = b.maxYear;
+}
+function refillRentMonthOptions() {
+  const ms = document.getElementById('rentMonth'), ys = document.getElementById('rentYear');
+  const b = getRentBounds();
+  const year = Number(ys.value);
+  const prevMonth = Number(ms.value);
+  ms.innerHTML = b.monthOptionsFor(year).map(m => `<option value="${m}">${BN_MONTHS[m]}</option>`).join('');
+  const clamped = b.clamp(prevMonth, year);
+  ms.value = clamped.month;
+}
+async function loadRent() {
+  fillMonthYearSelectors();
+  await loadUsersCache();
+  const month = document.getElementById('rentMonth').value;
+  const year = document.getElementById('rentYear').value;
+  const res = await api(`rent.php?action=monthly-summary&month=${month}&year=${year}`);
+  document.getElementById('rentBody').innerHTML = (res.data||[]).map(r => {
+    const paid = r.amount_paid || 0, due = r.amount_due || r.monthly_rent, remain = due - paid;
+    const status = r.status || 'due';
+    return `<tr><td>${r.user_code}</td><td>${r.name}</td><td>৳${fmtMoney(due)}</td><td>৳${fmtMoney(paid)}</td>
+      <td>৳${fmtMoney(remain)}</td><td><span class="badge ${status}">${STATUS_LABELS[status]}</span></td>
+      <td><button class="btn secondary" onclick="updatePayment(${r.user_id},'${r.name}',${due})">আপডেট</button></td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">কোনো গ্রাহক নেই</td></tr>';
+
+  const dueRes = await api('rent.php?action=due-list');
+  document.getElementById('dueListBody').innerHTML = (dueRes.data||[]).map(d => `
+    <tr><td>${d.user_code}</td><td>${d.name}</td><td>${BN_MONTHS[d.month]} ${d.year}</td><td>৳${fmtMoney(d.due_amount)}</td>
+    <td><button class="btn secondary" onclick="sendDueList(${d.user_id})">তালিকা পাঠান</button></td></tr>`).join('') || '<tr><td colspan="5" class="empty">কোনো বকেয়া নেই 🎉</td></tr>';
+}
+document.getElementById('rentMonth').addEventListener('change', loadRent);
+document.getElementById('rentYear').addEventListener('change', () => { refillRentMonthOptions(); loadRent(); });
+
+window.updatePayment = async (userId, name, defaultDue) => {
+  const month = document.getElementById('rentMonth').value;
+  const year = document.getElementById('rentYear').value;
+  const amountPaid = prompt(`${name} — এই মাসে কত টাকা জমা হয়েছে?`, defaultDue);
+  if (amountPaid === null) return;
+  const res = await api('rent.php?action=update-payment', { method: 'POST', body: {
+    user_id: userId, month, year, amount_paid: Number(amountPaid), amount_due: defaultDue
+  }});
+  toast(res.message);
+  if (res.success) loadRent();
+};
+window.sendDueList = async (userId) => {
+  const res = await api('notifications.php?action=send-due-list', { method: 'POST', body: { user_id: userId } });
+  toast(res.message);
+};
+
+// ---- ডিউটি ম্যানেজমেন্ট: আলাদা ট্যাব + মাসিক শিডিউলার ----
+let dutyMY = {};
+function getDutyBounds() { return monthYearBounds(1, 3, systemStart?.year, systemStart?.month); } // অতীত + বর্তমান + আগামি ১ মাস পর্যন্ত
+DUTY_TYPES.forEach(t => { const b = getDutyBounds(); dutyMY[t] = { month: b.maxMonth, year: b.maxYear }; });
+
+window.setDutyMonth = (type, val) => { dutyMY[type].month = Number(val); renderDutyManage(type); };
+window.setDutyYear = (type, val) => {
+  const clamped = getDutyBounds().clamp(dutyMY[type].month, Number(val));
+  dutyMY[type] = clamped; renderDutyManage(type);
+};
+
+window.setDutyStatus = async (id, status) => {
+  const res = await api('duties.php?action=status&id=' + id, { method: 'PUT', body: { status } });
+  toast(res.message);
+};
+window.sendMarketSummary = async (month, year) => {
+  const res = await api('notifications.php?action=send-market-summary', { method: 'POST', body: { month, year } });
+  toast(res.message);
+};
+window.setDutyAmount = async (id, type) => {
+  const input = document.getElementById('amt-' + id);
+  const val = Number(input.value);
+  if (input.value !== '' && (!val || val < 0)) { toast('সঠিক টাকার পরিমাণ লিখুন'); return; }
+  const res = await api('duties.php?action=status&id=' + id, { method: 'PUT', body: { status: 'done', amount: val } });
+  toast(res.message);
+  renderDutyManage(type); // সারাংশ রিফ্রেশ করতে
+};
+
+async function renderDutyManage(type) {
+  const { month, year } = dutyMY[type];
+  const dutyBounds = getDutyBounds();
+  const isMarket = type === 'market';
+  const res = await api(`duties.php?action=by-type-month&duty_type=${type}&month=${month}&year=${year}`);
+  const eligible = (res.data && res.data.eligible_users) || [];
+  const assignments = (res.data && res.data.assignments) || [];
+  const days = daysInMonth(year, month);
+
+  const monthOptions = dutyBounds.monthOptionsFor(year).map(m => `<option value="${m}" ${m===month?'selected':''}>${BN_MONTHS[m]}</option>`).join('');
+  const yearOptions = dutyBounds.yearOptions().map(y => `<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('');
+
+  let rowsHtml = '';
+  if (!eligible.length) {
+    rowsHtml = `<tr><td colspan="${isMarket?5:4}" class="empty">এই দায়িত্বের অনুমতি পাওয়া কোনো গ্রাহক নেই। "ইউজার" ট্যাব থেকে সংশ্লিষ্ট গ্রাহকের পারমিশন দিন।</td></tr>`;
+  } else {
+    for (let d=1; d<=days; d++) {
+      const dateStr = `${year}-${pad2(month)}-${pad2(d)}`;
+      const existing = assignments.find(a => a.duty_date === dateStr);
+      const wd = BN_WEEKDAYS[new Date(year, month-1, d).getDay()];
+      const options = `<option value="">-- খালি --</option>` + eligible.map(u =>
+        `<option value="${u.id}" ${existing && existing.assigned_user_id===u.id ? 'selected' : ''}>${u.name} (${u.user_code})</option>`).join('');
+      const statusCell = existing
+        ? `<select onchange="setDutyStatus(${existing.id}, this.value)">
+             <option value="pending" ${existing.status==='pending'?'selected':''}>বাকি আছে</option>
+             <option value="done" ${existing.status==='done'?'selected':''}>সম্পন্ন</option>
+             <option value="missed" ${existing.status==='missed'?'selected':''}>মিস হয়েছে</option>
+           </select>`
+        : '<span style="color:var(--ink-soft);">-</span>';
+      const amountCell = existing
+        ? `<div class="row" style="gap:4px;"><input type="number" id="amt-${existing.id}" value="${existing.amount ?? ''}" placeholder="টাকা" style="width:80px;">
+           <button class="btn secondary" style="padding:4px 8px;" onclick="setDutyAmount(${existing.id}, '${type}')">✓</button></div>`
+        : '-';
+      rowsHtml += `<tr><td>${d} তারিখ</td><td>${wd}</td><td><select id="dsel-${type}-${d}">${options}</select></td><td>${statusCell}</td>${isMarket?`<td>${amountCell}</td>`:''}</tr>`;
+    }
+  }
+
+  // ---- বাজারের মাসিক খরচের সারাংশ ----
+  let summaryHtml = '';
+  if (isMarket) {
+    const sres = await api(`duties.php?action=market-summary&month=${month}&year=${year}`);
+    if (sres.success) {
+      const byUser = sres.data.by_user || [];
+      summaryHtml = `
+        <div class="card">
+          <div class="row between" style="align-items:center;">
+            <h2>💰 ${BN_MONTHS[month]} ${year} — বাজার খরচের সারাংশ</h2>
+            <button class="btn secondary" onclick="sendMarketSummary(${month}, ${year})">📲 WhatsApp এ পাঠান</button>
+          </div>
+          <div class="stat" style="display:inline-block; margin-bottom:12px;">
+            <div class="num">৳${fmtMoney(sres.data.total)}</div><div class="lbl">সবাই মিলে মোট খরচ</div>
+          </div>
+          <table><thead><tr><th>নাম</th><th>মোট খরচ</th></tr></thead>
+            <tbody>${byUser.map(u => `<tr><td>${u.name}</td><td>৳${fmtMoney(u.total)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">এই মাসে কোনো খরচ যোগ হয়নি</td></tr>'}</tbody>
+          </table>
+        </div>`;
+    }
+  }
+
+  document.getElementById('sec-'+type).innerHTML = `
+    ${summaryHtml}
+    <div class="card">
+      <div class="row between">
+        <h2>${DUTY_ICONS[type]} ${DUTY_LABELS[type]} — মাসিক শিডিউল</h2>
+        <div class="row"><select onchange="setDutyMonth('${type}', this.value)">${monthOptions}</select>
+          <select onchange="setDutyYear('${type}', this.value)">${yearOptions}</select></div>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">প্রতিটি দিনের জন্য কে দায়িত্ব পালন করবে বেছে নিন, তারপর সংরক্ষণ করুন। স্ট্যাটাস ড্রপডাউন থেকে সরাসরি সম্পন্ন/মিস সেট করা যাবে।${isMarket?' টাকার ঘরে বদলে ✓ চাপলে সংরক্ষণ হবে (এডমিন/ম্যানেজার সবসময় বদলাতে পারবেন)।':''}</p>
+      <div style="max-height:400px; overflow-y:auto; margin-top:8px;">
+        <table class="daytable"><thead><tr><th>তারিখ</th><th>বার</th><th>দায়িত্বে</th><th>স্ট্যাটাস</th>${isMarket?'<th>টাকা</th>':''}</tr></thead>
+        <tbody>${rowsHtml}</tbody></table>
+      </div>
+      <button class="btn" style="margin-top:12px;" onclick="saveMonthlySchedule('${type}')" ${!eligible.length?'disabled':''}>মাসিক শিডিউল সংরক্ষণ করুন</button>
+    </div>`;
+}
+
+window.saveMonthlySchedule = async (type) => {
+  const { month, year } = dutyMY[type];
+  const days = daysInMonth(year, month);
+  const assignments = {};
+  for (let d=1; d<=days; d++) {
+    const sel = document.getElementById(`dsel-${type}-${d}`);
+    if (!sel) continue;
+    assignments[d] = sel.value ? Number(sel.value) : null;
+  }
+  const res = await api('duties.php?action=assign-month', { method: 'POST', body: { duty_type: type, month, year, assignments } });
+  toast(res.message);
+  renderDutyManage(type);
+};
+
+// ---- NOTIFY (শুধু এডমিন) ----
+async function loadNotify() {
+  await loadUsersCache();
+  const sel = document.getElementById('notifyTarget');
+  sel.innerHTML = '<option value="all">সবাইকে</option>' + allUsers.map(u => `<option value="${u.id}">${u.name} (${u.user_code})</option>`).join('');
+  const logs = await api('notifications.php?action=logs&limit=40');
+  const waStatusMap = {
+    queued: { cls: 'pending', label: 'সারিতে আছে' },
+    sent: { cls: 'partial', label: 'পাঠানো হয়েছে' },
+    delivered: { cls: 'paid', label: '✓✓ পৌঁছেছে' },
+    read: { cls: 'done', label: '✓✓ পড়েছে' },
+    failed: { cls: 'due', label: 'ব্যর্থ' },
+  };
+  document.getElementById('notifyLogBody').innerHTML = (logs.data||[]).map(l => {
+    const st = waStatusMap[l.status] || { cls: 'due', label: l.status };
+    const errLine = (l.status === 'failed' && l.error_message)
+      ? `<div style="color:var(--clay); font-size:11px; margin-top:4px;">⚠️ ${escapeHtml(l.error_message)}</div>` : '';
+    return `<tr><td>${l.name}</td><td>${l.category}</td><td style="max-width:280px; white-space:pre-wrap;">${(l.message||'').slice(0,80)}${errLine}</td>
+    <td><span class="badge ${st.cls}">${st.label}</span></td><td>${new Date(l.created_at).toLocaleString('bn-BD')}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty">কোনো ইতিহাস নেই</td></tr>';
+}
+document.getElementById('sendNotifyBtn').addEventListener('click', async () => {
+  const target = document.getElementById('notifyTarget').value;
+  const message = document.getElementById('notifyMsg').value.trim();
+  if (!message) { toast('মেসেজ লিখুন'); return; }
+  const user_ids = target === 'all' ? [] : [Number(target)];
+  const res = await api('notifications.php?action=send-custom', { method: 'POST', body: { message, user_ids } });
+  toast(res.message);
+  if (res.success) { document.getElementById('notifyMsg').value=''; loadNotify(); }
+});
+
+// ---- CHAT (শুধু এডমিন) ----
+let chatMode = 'group', chatTarget = null, chatPollTimer = null, lastMsgId = 0;
+document.querySelectorAll('.tab[data-chat]').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab[data-chat]').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  chatMode = t.dataset.chat;
+  document.getElementById('privateTargetSelect').style.display = chatMode === 'private' ? 'block' : 'none';
+  loadChat(chatMode);
+}));
+async function loadChat(mode) {
+  await loadUsersCache();
+  const targetSel = document.getElementById('privateTargetSelect');
+  if (mode === 'private') {
+    const prevValue = targetSel.value;
+    targetSel.innerHTML = allUsers.map(u => `<option value="${u.id}">${u.name} (${u.user_code})</option>`).join('');
+    // একবারই লিসেনার যোগ করা হয় (বারবার loadChat কল হলেও ডুপ্লিকেট না হয়)
+    if (!targetSel.dataset.bound) {
+      targetSel.addEventListener('change', () => { chatTarget = targetSel.value; renderChatWindow(true); });
+      targetSel.dataset.bound = '1';
+    }
+    // আগে সিলেক্ট করা গ্রাহক তালিকায় এখনো থাকলে সেটাই রাখা হয়, নাহলে প্রথমজন
+    const stillExists = allUsers.some(u => String(u.id) === String(prevValue));
+    targetSel.value = stillExists ? prevValue : (allUsers[0]?.id ?? '');
+    chatTarget = targetSel.value;
+  }
+  lastMsgId = 0;
+  document.getElementById('chatWindow').innerHTML = '';
+  renderChatWindow(true);
+  clearInterval(chatPollTimer);
+  chatPollTimer = setInterval(() => renderChatWindow(false), 4000);
+}
+async function renderChatWindow(replace) {
+  let res;
+  if (chatMode === 'group') res = await api('chat.php?action=group&after_id=' + (replace ? 0 : lastMsgId));
+  else { if (!chatTarget) { document.getElementById('chatWindow').innerHTML = '<div class="empty">কোনো গ্রাহক নেই</div>'; return; } res = await api('chat.php?action=private&with=' + chatTarget); }
+  if (!res || !res.success) return;
+  const box = document.getElementById('chatWindow');
+  if (replace) box.innerHTML = '';
+  const isPrivateFull = chatMode === 'private'; // প্রাইভেট থ্রেড প্রতিবার সম্পূর্ণ রিফ্রেশ হয়
+  if (isPrivateFull) box.innerHTML = '';
+  (res.data||[]).forEach(m => {
+    lastMsgId = Math.max(lastMsgId, m.id);
+    const mine = m.sender_id === user.id;
+    let body = '';
+    if (m.message_type === 'text') body = `<div>${escapeHtml(m.content)}</div>`;
+    else if (m.message_type === 'image') body = `<img src="../../${m.file_path}">`;
+    else if (m.message_type === 'voice') body = `<audio controls src="../../${m.file_path}"></audio>`;
+    // এডমিন সবসময় যেকোনো মেসেজ ডিলিট করতে পারবেন
+    const delBtn = `<button class="chat-del-btn" title="ডিলিট করুন" onclick="deleteChatMsg(${m.id})">🗑️</button>`;
+    box.innerHTML += `<div class="msg ${mine?'mine':'other'}"><div class="meta">${m.name} ${delBtn}</div>${body}</div>`;
+  });
+  box.scrollTop = box.scrollHeight;
+}
+window.deleteChatMsg = async (id) => {
+  if (!confirm('এই মেসেজটা ডিলিট করতে চান?')) return;
+  const res = await api('chat.php?action=delete&id=' + id, { method: 'DELETE' });
+  if (res.success) renderChatWindow(true);
+  else toast(res.message);
+};
+function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+document.getElementById('chatSendBtn').addEventListener('click', async () => {
+  const input = document.getElementById('chatInput');
+  const content = input.value.trim();
+  if (!content) return;
+  if (chatMode === 'private' && !chatTarget) { toast('কোনো গ্রাহক নির্বাচন করা নেই'); return; }
+  const receiver_id = chatMode === 'private' ? Number(chatTarget) : undefined;
+  const res = await api('chat.php?action=send', { method: 'POST', body: { content, receiver_id } });
+  if (res.success) { input.value=''; renderChatWindow(true); }
+  else toast(res.message);
+});
+async function sendMedia(fileOrBlob, type, filename) {
+  const fd = new FormData();
+  fd.append('file', fileOrBlob, filename || 'upload');
+  fd.append('type', type);
+  if (chatMode === 'private' && chatTarget) fd.append('receiver_id', chatTarget);
+  const res = await api('chat.php?action=send-media', { method: 'POST', body: fd, isForm: true });
+  if (res.success) renderChatWindow(true);
+  else toast(res.message);
+}
+document.getElementById('chatImage').addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  sendMedia(file, 'image', file.name);
+  e.target.value = '';
+});
+
+// ---- ভয়েস রেকর্ডিং (ব্রাউজার MediaRecorder API) ----
+let mediaRecorder = null, recordedChunks = [], recordTimer = null, recordSeconds = 0, mediaStream = null;
+document.getElementById('micBtn').addEventListener('click', async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    toast('মাইক্রোফোনের অনুমতি দরকার ভয়েস মেসেজ পাঠাতে');
+    return;
+  }
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(mediaStream);
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    clearInterval(recordTimer);
+    document.getElementById('recordingIndicator').style.display = 'none';
+    mediaStream.getTracks().forEach(t => t.stop());
+    if (recordSeconds < 1) { toast('রেকর্ডিং খুব ছোট, আবার চেষ্টা করুন'); return; }
+    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+    sendMedia(blob, 'voice', 'voice.webm');
+  };
+  mediaRecorder.start();
+  recordSeconds = 0;
+  document.getElementById('recordingIndicator').style.display = 'block';
+  document.getElementById('recordSeconds').textContent = '0';
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    document.getElementById('recordSeconds').textContent = String(recordSeconds);
+  }, 1000);
+});
+
+// ---- SETTINGS (শুধু এডমিন) — WhatsApp API + নোটিফিকেশন সময় + টাইমজোন ----
+let tzPreviewTimer = null;
+function startTzPreview() {
+  clearInterval(tzPreviewTimer);
+  const render = () => {
+    const sel = document.getElementById('set_timezone').value;
+    const tz = sel === '__custom__' ? (document.getElementById('set_timezone_custom').value || 'UTC') : sel;
+    try {
+      document.getElementById('tzPreview').textContent = new Intl.DateTimeFormat('bn-BD', {
+        timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+      }).format(new Date());
+    } catch { document.getElementById('tzPreview').textContent = '--:--:--'; }
+  };
+  render();
+  tzPreviewTimer = setInterval(render, 1000);
+}
+document.getElementById('set_timezone').addEventListener('change', () => {
+  const isCustom = document.getElementById('set_timezone').value === '__custom__';
+  document.getElementById('customTzWrap').style.display = isCustom ? 'block' : 'none';
+  startTzPreview();
+});
+document.getElementById('set_timezone_custom').addEventListener('input', startTzPreview);
+
+async function loadSettings() {
+  const res = await api('settings.php');
+  if (!res.success) return;
+  const s = res.data;
+  document.getElementById('set_phone_id').value = s.whatsapp_phone_number_id || '';
+  document.getElementById('set_biz_id').value = s.whatsapp_business_account_id || '';
+  document.getElementById('set_time1').value = s.notification_time_1 || '08:00';
+  document.getElementById('set_time2').value = s.notification_time_2 || '14:00';
+  document.getElementById('set_time3').value = s.notification_time_3 || '20:00';
+
+  const tzSelect = document.getElementById('set_timezone');
+  const tz = s.timezone || 'Asia/Dhaka';
+  const known = Array.from(tzSelect.options).some(o => o.value === tz);
+  if (known) { tzSelect.value = tz; document.getElementById('customTzWrap').style.display = 'none'; }
+  else { tzSelect.value = '__custom__'; document.getElementById('set_timezone_custom').value = tz; document.getElementById('customTzWrap').style.display = 'block'; }
+  startTzPreview();
+
+  document.getElementById('webhookUrlDisplay').value = new URL('../../api/webhook.php', window.location.href).href;
+  document.getElementById('set_webhook_token').value = s.whatsapp_webhook_verify_token || 'room_manager_verify_2026';
+
+  const startMonthSel = document.getElementById('set_start_month');
+  if (!startMonthSel.children.length) {
+    startMonthSel.innerHTML = BN_MONTHS.map((m,i) => i ? `<option value="${i}">${m}</option>` : '').join('');
+  }
+  startMonthSel.value = s.system_start_month || currentMonth();
+  document.getElementById('set_start_year').value = s.system_start_year || currentYear();
+}
+function copyField(id) {
+  const el = document.getElementById(id);
+  el.select();
+  el.setSelectionRange(0, 99999);
+  navigator.clipboard?.writeText(el.value).then(() => toast('কপি হয়েছে')).catch(() => document.execCommand('copy'));
+}
+document.getElementById('saveApiBtn').addEventListener('click', async () => {
+  const body = {
+    whatsapp_phone_number_id: document.getElementById('set_phone_id').value,
+    whatsapp_business_account_id: document.getElementById('set_biz_id').value,
+  };
+  const token = document.getElementById('set_token').value;
+  if (token) body.whatsapp_access_token = token;
+  const res = await api('settings.php', { method: 'POST', body });
+  toast(res.message);
+});
+document.getElementById('testWaBtn').addEventListener('click', async () => {
+  const phone = document.getElementById('testWaPhone').value.trim();
+  const resultBox = document.getElementById('testWaResult');
+  if (!phone) { toast('একটা ফোন নম্বর দিন'); return; }
+  resultBox.style.display = 'block';
+  resultBox.style.background = 'var(--paper-line)';
+  resultBox.textContent = 'পাঠানো হচ্ছে...';
+  const res = await api('settings.php?action=test-whatsapp', { method: 'POST', body: { phone } });
+  resultBox.style.background = res.success ? 'var(--sage-bg)' : 'var(--clay-bg)';
+  resultBox.style.color = res.success ? 'var(--sage)' : 'var(--clay)';
+  let text = res.message;
+  if (res.data && res.data.raw) text += '\n\nMeta এর আসল রেসপন্স:\n' + JSON.stringify(res.data.raw, null, 2);
+  resultBox.textContent = text;
+});
+document.getElementById('saveWebhookBtn').addEventListener('click', async () => {
+  const res = await api('settings.php', { method: 'POST', body: {
+    whatsapp_webhook_verify_token: document.getElementById('set_webhook_token').value.trim(),
+  }});
+  toast(res.message);
+});
+document.getElementById('saveTimesBtn').addEventListener('click', async () => {
+  const res = await api('settings.php', { method: 'POST', body: {
+    notification_time_1: document.getElementById('set_time1').value,
+    notification_time_2: document.getElementById('set_time2').value,
+    notification_time_3: document.getElementById('set_time3').value,
+  }});
+  toast(res.message);
+});
+document.getElementById('saveTimezoneBtn').addEventListener('click', async () => {
+  const sel = document.getElementById('set_timezone').value;
+  const tz = sel === '__custom__' ? document.getElementById('set_timezone_custom').value.trim() : sel;
+  if (!tz) { toast('টাইমজোন লিখুন'); return; }
+  const res = await api('settings.php', { method: 'POST', body: { timezone: tz } });
+  toast(res.message);
+});
+document.getElementById('saveStartDateBtn').addEventListener('click', async () => {
+  const month = Number(document.getElementById('set_start_month').value);
+  const year = Number(document.getElementById('set_start_year').value);
+  if (!year || year < 2000) { toast('সঠিক বছর দিন'); return; }
+  const res = await api('settings.php', { method: 'POST', body: { system_start_month: month, system_start_year: year } });
+  toast(res.message);
+  systemStart = { year, month };
+});
+document.getElementById('generateRentBtn').addEventListener('click', async () => {
+  const res = await api('rent.php?action=generate-monthly', { method: 'POST', body: {} });
+  toast(res.message);
+});
+document.getElementById('clearNotifyBtn').addEventListener('click', async () => {
+  if (!confirm('সত্যিই সব নোটিফিকেশন হিস্ট্রি মুছে ফেলতে চান? এটা ফিরিয়ে আনা যাবে না।')) return;
+  const res = await api('notifications.php?action=clear-history', { method: 'DELETE' });
+  toast(res.message);
+});
+document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+  const res = await api('settings.php?action=clear-cache', { method: 'POST', body: {} });
+  toast(res.message);
+});
+
+// ---- Init ----
+loadOverview();
+</script>
+</body>
+</html>

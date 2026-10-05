@@ -1,0 +1,26 @@
+Options -Indexes
+ServerSignature Off
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Block sensitive files
+<FilesMatch "\.(log|sql|sh|env|md|json|lock|git)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block logs and tmp directories  
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(logs|tmp)/.*$ - [F,L]
+    RewriteRule ^config/database\.php$ - [F,L]
+</IfModule>
+
+# Charset
+AddDefaultCharset utf-8

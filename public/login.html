@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>লগইন — Room Manager</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="stamp">RM</div>
+      <h1>রুম ম্যানেজার</h1>
+      <p class="sub">আপনার ইউজার আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
+
+      <form id="loginForm">
+        <div class="field" style="text-align:right;">
+          <label>ইউজার আইডি</label>
+          <input type="text" id="userCode" placeholder="AH-001" required autocomplete="username">
+        </div>
+        <div class="field" style="text-align:right;">
+          <label>পাসওয়ার্ড</label>
+          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn" style="width:100%;">প্রবেশ করুন</button>
+      </form>
+      <p id="errMsg" style="color:#B4443A; font-size:13px; margin-top:14px; display:none;"></p>
+    </div>
+  </div>
+
+  <script src="assets/app.js?v20260726"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userCode = document.getElementById('userCode').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('errMsg');
+      errEl.style.display = 'none';
+
+      const res = await fetch('../api/auth.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_code: userCode, password }),
+      }).then(r => r.json()).catch(() => null);
+
+      if (!res || !res.success) {
+        errEl.textContent = res?.message || 'সার্ভারের সাথে সংযোগ করা যায়নি';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      saveSession(res.data.token, res.data.user);
+      window.location.href = res.data.user.role === 'admin' ? 'admin/dashboard.html' : 'customer/dashboard.html';
+    });
+  </script>
+</body>
+</html>

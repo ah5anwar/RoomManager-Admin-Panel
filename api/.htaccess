@@ -1,0 +1,27 @@
+# ============================================
+# Authorization হেডার PHP পর্যন্ত পাস করার জন্য
+# ============================================
+# অনেক Apache/cPanel শেয়ার্ড হোস্টিং-এ নিরাপত্তার কারণে ডিফল্টভাবে
+# Authorization হেডার PHP-তে পৌঁছায় না — এই কারণে লগইন করা গেলেও
+# টোকেন-ভিত্তিক অন্য সব রিকোয়েস্ট (ডেটা লোড, সেভ) ব্যর্থ হয়।
+# নিচের যেকোনো একটা পদ্ধতি কাজ করলেই যথেষ্ট, তাই দুটোই রাখা হয়েছে।
+
+# পদ্ধতি ১: Apache 2.4.13+ এ সরাসরি এই ডিরেক্টিভ কাজ করে
+<IfModule mod_php.c>
+    CGIPassAuth On
+</IfModule>
+<IfModule mod_php7.c>
+    CGIPassAuth On
+</IfModule>
+<IfModule mod_php8.c>
+    CGIPassAuth On
+</IfModule>
+CGIPassAuth On
+
+# পদ্ধতি ২: RewriteRule দিয়ে হেডারটা এনভায়রনমেন্ট ভ্যারিয়েবলে কপি করা
+# (পুরনো Apache বা suPHP/FastCGI কনফিগারেশনে দরকার হতে পারে)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} ^(.+)$
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+</IfModule>

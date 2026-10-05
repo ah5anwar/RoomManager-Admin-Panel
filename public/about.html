@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>অ্যাপ সম্পর্কে — Room Manager</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .about-wrap { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+  .about-logo { width: 64px; height: 64px; border: 3px solid var(--rule); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--rule);
+    font-size: 22px; margin: 0 auto 16px; background: var(--paper); }
+  .about-card { background: #FFFDF7; border: 1px solid var(--paper-line); border-radius: 12px; padding: 28px; }
+  .about-title { text-align: center; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .about-version { text-align: center; font-size: 13px; color: var(--ink-soft); margin-bottom: 22px; }
+  .about-desc { font-size: 14px; line-height: 1.8; color: var(--ink); margin-bottom: 20px; }
+  .feature-list { list-style: none; padding: 0; margin: 0 0 20px; }
+  .feature-list li { padding: 10px 0; border-bottom: 1px dashed var(--paper-line); font-size: 13.5px; display: flex; gap: 10px; align-items: flex-start; }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-icon { flex-shrink: 0; }
+  .about-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--ink-soft); }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--rule); text-decoration: none; font-size: 13px; }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="about-wrap">
+    <a href="javascript:history.back()" class="back-link">← ফিরে যান</a>
+    <div class="about-card">
+      <div class="about-logo">RM</div>
+      <div class="about-title">Room Manager</div>
+      <div class="about-version">ভার্সন ১.০ • ২০২৬</div>
+
+      <div class="about-desc">
+        <b>Room Manager</b> একটি সম্পূর্ণ বাংলা ভাষাভিত্তিক কমার্শিয়াল রুম/মেস ম্যানেজমেন্ট সিস্টেম —
+        ভাড়া আদায়, দৈনিক দায়িত্ব বণ্টন (বাজার, রান্না, ময়লা ফেলা, রুম পরিষ্কার), গ্রুপ ও প্রাইভেট চ্যাট,
+        এবং WhatsApp-এর মাধ্যমে স্বয়ংক্রিয় নোটিফিকেশন — সবকিছু একটা প্ল্যাটফর্মে।
+      </div>
+
+      <ul class="feature-list">
+        <li><span class="feature-icon">🏠</span><span><b>ড্যাশবোর্ড</b> — আজকের দায়িত্ব ও বকেয়ার সংক্ষিপ্ত চিত্র এক নজরে</span></li>
+        <li><span class="feature-icon">৳</span><span><b>ভাড়া ব্যবস্থাপনা</b> — মাসিক বকেয়া স্বয়ংক্রিয় জেনারেশন, পেমেন্ট ট্র্যাকিং</span></li>
+        <li><span class="feature-icon">🧹</span><span><b>দৈনিক দায়িত্ব</b> — বাজার/রান্না/ময়লা/ক্লিন শিডিউল ও সম্পন্ন-করণ ট্র্যাকিং</span></li>
+        <li><span class="feature-icon">💬</span><span><b>চ্যাট</b> — গ্রুপ চ্যাট ও এডমিনের সাথে প্রাইভেট মেসেজ, ছবি/ভয়েস সাপোর্ট</span></li>
+        <li><span class="feature-icon">🔔</span><span><b>নোটিফিকেশন</b> — WhatsApp ও অ্যাপ-ভিতরের রিমাইন্ডার</span></li>
+        <li><span class="feature-icon">📱</span><span><b>মাল্টি-প্ল্যাটফর্ম</b> — ওয়েব ও Android অ্যাপ, একই ডেটা সবখানে সিঙ্ক</span></li>
+      </ul>
+
+      <div class="about-footer">
+        &copy; ২০২৬ Room Manager। সর্বস্বত্ব সংরক্ষিত।<br>
+        <a href="developer.html" style="color:var(--rule);">ডেভেলপার তথ্য দেখুন →</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

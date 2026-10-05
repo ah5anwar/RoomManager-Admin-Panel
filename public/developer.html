@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ডেভেলপার তথ্য — Room Manager</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .dev-wrap { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+  .dev-card { background: #FFFDF7; border: 1px solid var(--paper-line); border-radius: 12px; padding: 28px; text-align: center; }
+  .dev-avatar { width: 84px; height: 84px; border-radius: 50%; background: var(--sage-bg); border: 3px solid var(--sage);
+    display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: var(--sage);
+    margin: 0 auto 16px; }
+  .dev-name { font-size: 20px; font-weight: 700; color: var(--ink); }
+  .dev-role { font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; }
+  .dev-contact { list-style: none; padding: 0; margin: 0; text-align: left; }
+  .dev-contact li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--paper-line);
+    border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
+  .dev-contact a { color: var(--rule); text-decoration: none; word-break: break-all; }
+  .dev-contact a:hover { text-decoration: underline; }
+  .dev-icon { font-size: 18px; flex-shrink: 0; }
+  .dev-about { font-size: 13.5px; line-height: 1.8; color: var(--ink); text-align: left; margin: 20px 0; padding-top: 16px; border-top: 1px dashed var(--paper-line); }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--rule); text-decoration: none; font-size: 13px; }
+  .back-link:hover { text-decoration: underline; }
+  .edit-note { background: var(--gold-bg, #F6EAD2); border: 1px dashed var(--gold); border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; color: var(--ink-soft); margin-bottom: 20px; text-align: left; }
+</style>
+</head>
+<body>
+  <div class="dev-wrap">
+    <a href="javascript:history.back()" class="back-link">← ফিরে যান</a>
+
+    <!-- এই নোটটা নিজে মুছে ফেলুন, শুধু আপনার জন্য একটা রিমাইন্ডার -->
+    <div class="edit-note">
+      ℹ️ এই পেজের নিচের তথ্যগুলো (ফোন, WhatsApp) প্লেসহোল্ডার — <code>public/developer.html</code> ফাইলে গিয়ে
+      নিজের আসল তথ্য দিয়ে বদলে নিন, তারপর এই নোটটা মুছে ফেলুন।
+    </div>
+
+    <div class="dev-card">
+      <div class="dev-avatar">AH</div>
+      <div class="dev-name">Anwar Hossain</div>
+      <div class="dev-role">ডিজিটাল স্পেশালিস্ট • ফুল-স্ট্যাক ডেভেলপার</div>
+
+      <ul class="dev-contact">
+        <li><span class="dev-icon">📞</span><span>ফোন / WhatsApp: <a href="tel:+8801XXXXXXXXX">+৮৮০ ১XXX-XXXXXX</a></span></li>
+        <li><span class="dev-icon">🌐</span><span>ওয়েবসাইট: <a href="https://creativesit.com" target="_blank" rel="noopener">creativesit.com</a></span></li>
+      </ul>
+
+      <div class="dev-about">
+        ৮ বছরের বেশি অভিজ্ঞতাসম্পন্ন ডিজিটাল স্পেশালিস্ট — ভিডিও এডিটিং, গ্রাফিক ও ওয়েব ডিজাইন, ডিজিটাল মার্কেটিং,
+        Android অ্যাপ ডেভেলপমেন্ট ও SEO নিয়ে কাজ করি। এই Room Manager সিস্টেমটি সম্পূর্ণভাবে কাস্টম-তৈরি,
+        PHP/MySQL ব্যাকএন্ড ও Android অ্যাপসহ।
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>আমার একাউন্ট — Room Manager</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+.notify-banner{background:#F6EAD2;border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--ink);margin-bottom:10px;}
+.highlight-row td{font-weight:700;color:var(--rule)!important;font-size:15px!important;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar">
+    <div class="logo">RM</div>
+    <div class="nav-item active" data-sec="overview">🏠<span class="label">হোম</span></div>
+    <div class="nav-item" data-sec="rent">৳<span class="label">ভাড়া</span></div>
+    <div class="nav-item" data-sec="market" data-perm="market">🛒<span class="label">বাজার</span></div>
+    <div class="nav-item" data-sec="cooking" data-perm="cooking">🍳<span class="label">রান্না</span></div>
+    <div class="nav-item" data-sec="trash" data-perm="trash">🗑️<span class="label">ময়লা</span></div>
+    <div class="nav-item" data-sec="cleaning" data-perm="cleaning">🧹<span class="label">ক্লিন</span></div>
+    <div class="nav-item" data-sec="notifications">🔔<span class="label">নোটিফিকেশন</span></div>
+    <div class="nav-item" data-sec="chat" data-perm="chat">💬<span class="label">চ্যাট</span></div>
+    <a href="../about.html" class="nav-item" style="text-decoration:none; margin-top:auto;">ℹ️<span class="label">About</span></a>
+    <a href="../developer.html" class="nav-item" style="text-decoration:none;">👨‍💻<span class="label">ডেভেলপার</span></a>
+    <div class="nav-item" id="logoutBtn">🚪<span class="label">লগআউট</span></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">হোম</h1>
+      <div class="who">স্বাগতম, <b id="custName"></b><br><span id="custCode"></span></div>
+    </div>
+
+    <section id="sec-overview">
+      <div id="notifyBanners"></div>
+      <div class="grid cols-3" id="statCards"></div>
+      <div class="card">
+        <h2>আজকের সব দায়িত্ব</h2>
+        <table><thead><tr><th>দায়িত্ব</th><th>নাম</th><th>স্ট্যাটাস</th><th></th></tr></thead>
+          <tbody id="todayDutyBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-rent" style="display:none;">
+      <div class="grid cols-2" id="rentStatCards"></div>
+      <div class="card" id="rentWaCard" style="display:none;">
+        <button class="btn" id="sendDueListBtn" style="width:100%;">📲 WhatsApp এ বকেয়ার তালিকা পাঠান</button>
+      </div>
+      <div class="card">
+        <h2>আমার ভাড়ার হিসাব (মাস অনুযায়ী)</h2>
+        <table><thead><tr><th>মাস</th><th>নির্ধারিত</th><th>জমা</th><th>বাকি</th><th>স্ট্যাটাস</th></tr></thead>
+          <tbody id="rentBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-market" style="display:none;"></section>
+    <section id="sec-cooking" style="display:none;"></section>
+    <section id="sec-trash" style="display:none;"></section>
+    <section id="sec-cleaning" style="display:none;"></section>
+
+    <section id="sec-notifications" style="display:none;">
+      <div class="card">
+        <h2>🔔 আমার নোটিফিকেশন</h2>
+        <table><thead><tr><th>ধরন</th><th>মেসেজ</th><th>স্ট্যাটাস</th><th>সময়</th></tr></thead>
+          <tbody id="notifyLogBody"></tbody></table>
+      </div>
+    </section>
+
+    <section id="sec-chat" style="display:none;">
+      <div class="card">
+        <div class="tabs" id="chatTabs">
+          <div class="tab active" data-chat="group">গ্রুপ চ্যাট</div>
+          <div class="tab" data-chat="private" id="privateTabBtn" style="display:none;">এডমিনের সাথে</div>
+        </div>
+        <p style="font-size:12px; color:var(--ink-soft); margin-top:-4px;">গ্রুপ চ্যাটে সবাই মেসেজ দেখতে ও পাঠাতে পারবেন। এডমিনের সাথে প্রাইভেট মেসেজও আদান-প্রদান করা যাবে।</p>
+        <div class="chat-window" id="chatWindow"></div>
+        <div class="row" style="margin-top:12px;">
+          <input type="text" id="chatInput" placeholder="মেসেজ লিখুন...">
+          <label class="btn secondary" style="cursor:pointer;">📷<input type="file" id="chatImage" accept="image/*" style="display:none;"></label>
+          <button class="btn secondary" id="micBtn" type="button">🎤</button>
+          <button class="btn" id="chatSendBtn">পাঠান</button>
+        </div>
+        <div id="recordingIndicator" style="display:none; margin-top:8px; padding:8px 12px; background:var(--clay-bg); border-radius:8px; color:var(--rule); font-size:13px; font-weight:600;">
+          🔴 রেকর্ড হচ্ছে... <span id="recordSeconds">0</span>s — আবার মাইক বাটনে চাপুন পাঠাতে
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="../assets/app.js?v20260726"></script>
+<script>
+setTimeout(function () {
+  if (typeof monthYearBounds !== 'function') {
+    document.body.innerHTML = '<div style="max-width:600px;margin:60px auto;padding:24px;background:#F5E4DE;border:2px solid #B4443A;border-radius:10px;font-family:sans-serif;color:#262420;">' +
+      '<h2 style="color:#B4443A;margin-top:0;">⚠️ assets/app.js পুরনো/আপডেট হয়নি</h2>' +
+      '<p>এই পেজের কোড নতুন, কিন্তু <code>assets/app.js</code> ফাইলটা এখনো পুরনো ভার্সন হিসেবে লোড হচ্ছে (ব্রাউজার বা সার্ভার ক্যাশের কারণে হতে পারে)।</p>' +
+      '<p><b>করণীয়:</b></p><ol>' +
+      '<li>cPanel File Manager দিয়ে <code>public/assets/app.js</code> ফাইলটা আবার আপলোড করে প্রতিস্থাপন করুন</li>' +
+      '<li>হোস্টিং-এ Cloudflare/CDN বা ক্যাশিং প্লাগইন থাকলে সেটার ক্যাশ পার্জ (Purge Cache) করুন</li>' +
+      '<li>ব্রাউজারে Incognito/Private উইন্ডোতে খুলে দেখুন (ব্রাউজার ক্যাশ এড়িয়ে যায়)</li>' +
+      '</ol></div>';
+  }
+}, 300);
+</script>
+<script>
+let user = requireRole('customer');
+if (user) {
+  document.getElementById('custName').textContent = user.name;
+  document.getElementById('custCode').textContent = user.user_code;
+  applyPermVisibility();
+}
+function applyPermVisibility() {
+  const perms = user.permissions || [];
+  document.querySelectorAll('.nav-item[data-perm]').forEach(el => {
+    el.style.display = perms.includes(el.dataset.perm) ? '' : 'none';
+  });
+  document.getElementById('privateTabBtn').style.display = perms.includes('chat') ? '' : 'none';
+}
+
+// পেজ লোড হওয়ার সাথে সাথেই সার্ভার থেকে সর্বশেষ পারমিশন রিফ্রেশ করা হয় (এডমিন বদলে থাকলে সাথে সাথে প্রতিফলিত হবে)
+refreshMe().then(freshUser => { if (freshUser) { user = freshUser; applyPermVisibility(); } });
+
+const titles = { overview:'হোম', rent:'আমার ভাড়া', market:'বাজার করা', cooking:'রান্না করা', trash:'ময়লা ফেলা', cleaning:'রুম ক্লিন করা', notifications:'নোটিফিকেশন', chat:'চ্যাট' };
+document.querySelectorAll('.nav-item[data-sec]').forEach(item => {
+  item.addEventListener('click', () => {
+    if (item.style.display === 'none') return;
+    document.querySelectorAll('.nav-item[data-sec]').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    Object.keys(titles).forEach(s => document.getElementById('sec-'+s).style.display = 'none');
+    const sec = item.dataset.sec;
+    document.getElementById('sec-'+sec).style.display = 'block';
+    document.getElementById('pageTitle').textContent = titles[sec];
+    if (sec === 'overview') loadOverview();
+    if (sec === 'rent') loadRent();
+    if (DUTY_TYPES.includes(sec)) { dutyMY[sec] = dutyMY[sec] || { month: currentMonth(), year: currentYear() }; renderDutyCustomer(sec); }
+    if (sec === 'notifications') loadNotifications();
+    if (sec === 'chat') loadChat();
+  });
+});
+document.getElementById('logoutBtn').addEventListener('click', logout);
+
+// ---- OVERVIEW ----
+async function loadOverview() {
+  const today = new Date().toISOString().slice(0,10);
+  const perms = user.permissions || [];
+  const rentRes = await api('rent.php?action=history');
+  const dutyRes = await api('duties.php?action=by-date&date=' + today);
+
+  const dues = (rentRes.data||[]).filter(r => r.status !== 'paid');
+  const totalDue = dues.reduce((s,r) => s + (r.amount_due - r.amount_paid), 0);
+  // এডমিন যেসব দায়িত্বে পারমিশন দিয়েছে সেগুলোর আজকের পুরো তালিকা (সবার নাম, শুধু নিজেরটা না)
+  const allTodayDuties = (dutyRes.data||[]).filter(d => perms.includes(d.duty_type));
+  const myTodayDuties = allTodayDuties.filter(d => d.user_code === user.user_code);
+
+  document.getElementById('statCards').innerHTML = `
+    <div class="stat"><div class="num">৳${fmtMoney(totalDue)}</div><div class="lbl">মোট বকেয়া</div></div>
+    <div class="stat"><div class="num">${myTodayDuties.length}</div><div class="lbl">আমার আজকের দায়িত্ব</div></div>
+    <div class="stat"><div class="num">${user.room_no || '-'}</div><div class="lbl">রুম নম্বর</div></div>
+  `;
+
+  let banners = '';
+  if (totalDue > 0) banners += `<div class="notify-banner">💰 আপনার মোট ৳${fmtMoney(totalDue)} টাকা ভাড়া বকেয়া আছে — "ভাড়া" ট্যাব থেকে বিস্তারিত দেখুন।</div>`;
+  const pendingMine = myTodayDuties.filter(d => d.status === 'pending');
+  if (pendingMine.length) {
+    const names = pendingMine.map(d => `আজ ${DUTY_LABELS[d.duty_type]} আপনার দায়িত্বে`).join('। ');
+    banners += `<div class="notify-banner">📋 ${names} — সম্পন্ন হলে "সম্পন্ন করলাম" চাপুন।</div>`;
+  }
+  document.getElementById('notifyBanners').innerHTML = banners;
+
+  document.getElementById('todayDutyBody').innerHTML = allTodayDuties.map(d => {
+    const isMe = d.user_code === user.user_code;
+    return `<tr class="${isMe ? 'highlight-row' : ''}"><td>${DUTY_ICONS[d.duty_type]} ${DUTY_LABELS[d.duty_type]}</td><td>${d.name || '-'}</td>
+    <td><span class="badge ${d.status}">${STATUS_LABELS[d.status]}</span></td>
+    <td>${isMe && d.status==='pending' ? `<button class="btn secondary" onclick="markDone(${d.id})">✅ সম্পন্ন করলাম</button>`:''}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty">আজ কোনো দায়িত্ব সেট করা নেই</td></tr>';
+}
+
+window.markDone = async (id, amount) => {
+  const body = { status: 'done' };
+  if (amount !== undefined) body.amount = amount;
+  const res = await api('duties.php?action=status&id=' + id, { method: 'PUT', body });
+  toast(res.message);
+  loadOverview();
+  DUTY_TYPES.forEach(t => { const sec = document.getElementById('sec-'+t); if (sec && sec.style.display !== 'none') renderDutyCustomer(t); });
+};
+window.submitMarketAmount = (id) => {
+  const input = document.getElementById('marketAmount-' + id);
+  const val = Number(input.value);
+  if (!val || val <= 0) { toast('সঠিক টাকার পরিমাণ লিখুন'); return; }
+  markDone(id, val);
+};
+
+// ---- RENT ----
+async function loadRent() {
+  const res = await api('rent.php?action=history');
+  const rows = (res.data||[]).sort((a,b) => b.year - a.year || b.month - a.month);
+  const totalDue = rows.filter(r => r.status !== 'paid').reduce((s,r) => s + (r.amount_due - r.amount_paid), 0);
+  const dueMonthsCount = rows.filter(r => r.status !== 'paid').length;
+
+  document.getElementById('rentStatCards').innerHTML = `
+    <div class="stat"><div class="num">৳${fmtMoney(totalDue)}</div><div class="lbl">সর্বমোট বকেয়া</div></div>
+    <div class="stat"><div class="num">${dueMonthsCount}</div><div class="lbl">কয় মাস বাকি</div></div>
+  `;
+  document.getElementById('rentWaCard').style.display = totalDue > 0 ? 'block' : 'none';
+
+  document.getElementById('rentBody').innerHTML = rows.map(r => `
+    <tr><td>${BN_MONTHS[r.month]} ${r.year}</td><td>৳${fmtMoney(r.amount_due)}</td><td>৳${fmtMoney(r.amount_paid)}</td>
+    <td>৳${fmtMoney(r.amount_due - r.amount_paid)}</td><td><span class="badge ${r.status}">${STATUS_LABELS[r.status]}</span></td></tr>`).join('') || '<tr><td colspan="5" class="empty">এখনো কোনো ভাড়ার হিসাব যোগ হয়নি</td></tr>';
+}
+document.getElementById('sendDueListBtn').addEventListener('click', async () => {
+  const res = await api('notifications.php?action=send-due-list', { method: 'POST', body: { user_id: user.id } });
+  toast(res.message);
+});
+
+// সিস্টেম শুরুর তারিখ (এডমিন সেটিংসে যা সেট করা আছে) লোড করে মাস/সাল ড্রপডাউনের সীমা ঠিক করা হয়
+let systemStart = null;
+getSystemStartDate().then(s => { systemStart = s; });
+
+// ---- DUTY (মাসিক রোস্টার — সবার নাম, নিজেরটা হাইলাইট) ----
+const dutyMY = {};
+DUTY_TYPES.forEach(t => { dutyMY[t] = { month: currentMonth(), year: currentYear() }; });
+
+async function renderDutyCustomer(type) {
+  const bounds = monthYearBounds(1, 3, systemStart?.year, systemStart?.month); // অতীত + বর্তমান + আগামি ১ মাস পর্যন্ত
+  const { month, year } = dutyMY[type];
+  const today = new Date().toISOString().slice(0,10);
+  const isMarket = type === 'market';
+
+  const res = await api(`duties.php?action=by-type-month&duty_type=${type}&month=${month}&year=${year}`);
+  if (!res.success) {
+    document.getElementById('sec-'+type).innerHTML = `<div class="card"><p style="color:var(--clay);">${res.message}</p></div>`;
+    return;
+  }
+  const assignments = (res.data && res.data.assignments) || [];
+  const days = daysInMonth(year, month);
+
+  const monthOptions = bounds.monthOptionsFor(year).map(m => `<option value="${m}" ${m===month?'selected':''}>${BN_MONTHS[m]}</option>`).join('');
+  const yearOptions = bounds.yearOptions().map(y => `<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('');
+
+  let rows = '';
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${year}-${pad2(month)}-${pad2(d)}`;
+    const duty = assignments.find(a => a.duty_date === dateStr);
+    const isMe = duty && duty.assigned_user_id === user.id;
+
+    let actionCell = '';
+    let amountCell = isMarket ? '-' : null;
+    if (duty) {
+      if (isMarket) {
+        if (duty.amount !== null && duty.amount !== undefined) {
+          amountCell = `৳${fmtMoney(duty.amount)}`;
+        }
+        if (isMe && duty.status === 'pending') {
+          actionCell = `<div class="row" style="gap:6px;">
+            <input type="number" id="marketAmount-${duty.id}" placeholder="টাকা" style="width:90px;">
+            <button class="btn secondary" onclick="submitMarketAmount(${duty.id})">✅ সম্পন্ন</button>
+          </div>`;
+        } else if (isMe && duty.status === 'done' && (duty.amount === null || duty.amount === undefined)) {
+          // এডমিন/ম্যানেজার আগেই সম্পন্ন হিসেবে মার্ক করেছে কিন্তু টাকা লেখা হয়নি — গ্রাহক এখনো একবার বসাতে পারবে
+          actionCell = `<div class="row" style="gap:6px;">
+            <input type="number" id="marketAmount-${duty.id}" placeholder="টাকা লিখুন">
+            <button class="btn secondary" onclick="submitMarketAmount(${duty.id})">টাকা যোগ করুন</button>
+          </div>`;
+        }
+      } else if (isMe && duty.status === 'pending') {
+        actionCell = `<button class="btn secondary" onclick="markDone(${duty.id})">✅ সম্পন্ন</button>`;
+      }
+    }
+
+    rows += `<tr class="${isMe ? 'highlight-row' : ''}">
+      <td>${d} তারিখ${dateStr===today?' (আজ)':''}, ${BN_WEEKDAYS[new Date(year, month-1, d).getDay()]}</td>
+      <td>${duty ? duty.name : '<span style="color:var(--ink-soft);">-- খালি --</span>'}</td>
+      <td>${duty ? `<span class="badge ${duty.status}">${STATUS_LABELS[duty.status]}</span>` : '-'}</td>
+      ${isMarket ? `<td>${amountCell || '-'}</td>` : ''}
+      <td>${actionCell}</td>
+    </tr>`;
+  }
+
+  // ---- বাজারের ক্ষেত্রে মাসিক খরচের সারাংশ (সবাই মিলে কত, কে কত) ----
+  let summaryHtml = '';
+  if (isMarket) {
+    const sres = await api(`duties.php?action=market-summary&month=${month}&year=${year}`);
+    if (sres.success) {
+      const byUser = sres.data.by_user || [];
+      summaryHtml = `
+        <div class="card">
+          <h2>💰 ${BN_MONTHS[month]} ${year} — বাজার খরচের সারাংশ</h2>
+          <div class="stat" style="display:inline-block; margin-bottom:12px;">
+            <div class="num">৳${fmtMoney(sres.data.total)}</div><div class="lbl">সবাই মিলে মোট খরচ</div>
+          </div>
+          <table><thead><tr><th>নাম</th><th>মোট খরচ</th></tr></thead>
+            <tbody>${byUser.map(u => `<tr><td>${u.name}</td><td>৳${fmtMoney(u.total)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">এই মাসে কোনো খরচ যোগ হয়নি</td></tr>'}</tbody>
+          </table>
+        </div>`;
+    }
+  }
+
+  document.getElementById('sec-'+type).innerHTML = `
+    ${summaryHtml}
+    <div class="card">
+      <div class="row between"><h2>${DUTY_ICONS[type]} ${DUTY_LABELS[type]} — মাসিক তালিকা</h2>
+        <div class="row">
+          <select id="dutyMonthSel-${type}">${monthOptions}</select>
+          <select id="dutyYearSel-${type}">${yearOptions}</select>
+        </div>
+      </div>
+      <table><thead><tr><th>তারিখ</th><th>নাম</th><th>স্ট্যাটাস</th>${isMarket?'<th>টাকা</th>':''}<th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="${isMarket?5:4}" class="empty">এই মাসে কোনো শিডিউল সেট করা হয়নি</td></tr>`}</tbody></table>
+    </div>`;
+
+  document.getElementById(`dutyMonthSel-${type}`).addEventListener('change', (e) => {
+    dutyMY[type].month = Number(e.target.value); renderDutyCustomer(type);
+  });
+  document.getElementById(`dutyYearSel-${type}`).addEventListener('change', (e) => {
+    const clamped = bounds.clamp(dutyMY[type].month, Number(e.target.value));
+    dutyMY[type] = clamped; renderDutyCustomer(type);
+  });
+}
+
+// ---- NOTIFICATIONS ----
+async function loadNotifications() {
+  const res = await api('notifications.php?action=logs&limit=50');
+  const CATEGORY_LABELS = { duty_reminder:'🧹 দায়িত্ব রিমাইন্ডার', rent_due:'৳ ভাড়া বকেয়া', rent_paid:'৳ ভাড়া পরিশোধ', rent_overdue_list:'৳ বকেয়ার তালিকা', custom:'📢 এডমিনের মেসেজ', market_summary:'🛒 বাজার খরচের সারাংশ' };
+  document.getElementById('notifyLogBody').innerHTML = (res.data||[]).map(l => `
+    <tr><td>${CATEGORY_LABELS[l.category] || l.category}</td><td style="max-width:280px; white-space:pre-wrap; text-align:right;">${escapeHtml(l.message)}</td>
+    <td><span class="badge ${l.status==='sent'||l.status==='delivered'||l.status==='read'?'paid':(l.status==='failed'?'due':'partial')}">${NOTIFY_STATUS_LABELS[l.status] || l.status}</span></td>
+    <td>${new Date(l.created_at).toLocaleString('bn-BD')}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">এখনো কোনো নোটিফিকেশন আসেনি</td></tr>';
+}
+
+// ---- CHAT (গ্রুপ + এডমিনের সাথে প্রাইভেট) ----
+let chatMode = 'group', adminId = null, lastMsgId = 0, chatPollTimer = null;
+
+document.querySelectorAll('#chatTabs .tab').forEach(t => t.addEventListener('click', () => {
+  if (t.style.display === 'none') return;
+  document.querySelectorAll('#chatTabs .tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  chatMode = t.dataset.chat;
+  loadChat();
+}));
+
+async function loadChat() {
+  if (chatMode === 'private' && adminId === null) {
+    const res = await api('chat.php?action=admin-info');
+    if (res.success && res.data) adminId = res.data.id;
+  }
+  lastMsgId = 0;
+  document.getElementById('chatWindow').innerHTML = '';
+  await renderChatWindow(true);
+  clearInterval(chatPollTimer);
+  chatPollTimer = setInterval(() => renderChatWindow(false), 4000);
+}
+async function renderChatWindow(replace) {
+  let res;
+  if (chatMode === 'group') res = await api('chat.php?action=group&after_id=' + (replace ? 0 : lastMsgId));
+  else { if (!adminId) return; res = await api('chat.php?action=private&with=' + adminId); }
+  if (!res || !res.success) return;
+  const box = document.getElementById('chatWindow');
+  if (replace) box.innerHTML = '';
+  (res.data||[]).forEach(m => {
+    lastMsgId = Math.max(lastMsgId, m.id);
+    const mine = m.sender_id === user.id;
+    let body = '';
+    if (m.message_type === 'text') body = `<div>${escapeHtml(m.content)}</div>`;
+    else if (m.message_type === 'image') body = `<img src="../../${m.file_path}">`;
+    else if (m.message_type === 'voice') body = `<audio controls src="../../${m.file_path}"></audio>`;
+    box.innerHTML += `<div class="msg ${mine?'mine':'other'}"><div class="meta">${m.name}</div>${body}</div>`;
+  });
+  if (chatMode === 'group' && replace) box.scrollTop = box.scrollHeight;
+  else if (chatMode === 'private') box.scrollTop = box.scrollHeight;
+}
+function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+document.getElementById('chatSendBtn').addEventListener('click', async () => {
+  const input = document.getElementById('chatInput');
+  const content = input.value.trim();
+  if (!content) return;
+  const receiver_id = chatMode === 'private' ? adminId : undefined;
+  const res = await api('chat.php?action=send', { method: 'POST', body: { content, receiver_id } });
+  if (res.success) { input.value=''; renderChatWindow(false); }
+  else toast(res.message);
+});
+async function sendMedia(fileOrBlob, type, filename) {
+  const fd = new FormData();
+  fd.append('file', fileOrBlob, filename || 'upload');
+  fd.append('type', type);
+  if (chatMode === 'private' && adminId) fd.append('receiver_id', adminId);
+  const res = await api('chat.php?action=send-media', { method: 'POST', body: fd, isForm: true });
+  if (!res.success) toast(res.message);
+  else renderChatWindow(false);
+}
+document.getElementById('chatImage').addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  sendMedia(file, 'image', file.name);
+  e.target.value = '';
+});
+
+// ---- ভয়েস রেকর্ডিং (ব্রাউজার MediaRecorder API) ----
+let mediaRecorder = null, recordedChunks = [], recordTimer = null, recordSeconds = 0, mediaStream = null;
+
+document.getElementById('micBtn').addEventListener('click', async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    toast('মাইক্রোফোনের অনুমতি দরকার ভয়েস মেসেজ পাঠাতে');
+    return;
+  }
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(mediaStream);
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    clearInterval(recordTimer);
+    document.getElementById('recordingIndicator').style.display = 'none';
+    mediaStream.getTracks().forEach(t => t.stop());
+    if (recordSeconds < 1) { toast('রেকর্ডিং খুব ছোট, আবার চেষ্টা করুন'); return; }
+    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+    sendMedia(blob, 'voice', 'voice.webm');
+  };
+  mediaRecorder.start();
+  recordSeconds = 0;
+  document.getElementById('recordingIndicator').style.display = 'block';
+  document.getElementById('recordSeconds').textContent = '0';
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    document.getElementById('recordSeconds').textContent = String(recordSeconds);
+  }, 1000);
+});
+
+loadOverview();
+</script>
+</body>
+</html>

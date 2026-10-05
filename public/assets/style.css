@@ -1,0 +1,216 @@
+/* ============================================
+   Room Manager — "হিসাবের খাতা" Ledger Theme
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+
+:root {
+  --paper: #F6F1E1;
+  --paper-line: #E7DCC0;
+  --ink: #262420;
+  --ink-soft: #5B564C;
+  --rule: #B4443A;
+  --gold: #B8923F;
+  --sage: #3F6B52;
+  --sage-bg: #E7EEE6;
+  --clay: #B4443A;
+  --clay-bg: #F5E4DE;
+  --card: #FFFDF7;
+  --radius: 10px;
+  --shadow: 0 2px 10px rgba(38,36,32,0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Hind Siliguri', sans-serif;
+  background: var(--paper);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent, transparent 41px,
+    var(--paper-line) 41px, var(--paper-line) 42px
+  );
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Tiro Bangla', serif;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ---- App Shell: fixed icon sidebar ---- */
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 76px;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 6px;
+  position: fixed;
+  top: 0; bottom: 0; left: 0;
+}
+
+.sidebar .logo {
+  color: var(--gold);
+  font-size: 22px;
+  margin-bottom: 18px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Tiro Bangla', serif;
+}
+
+.sidebar .nav-item {
+  width: 52px; height: 52px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: #cfc9ba;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 20px;
+  gap: 3px;
+  transition: background .15s, color .15s;
+}
+.sidebar .nav-item span.label { font-size: 9px; }
+.sidebar .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sidebar .nav-item.active { background: var(--rule); color: #fff; }
+
+.main {
+  margin-left: 76px;
+  flex: 1;
+  padding: 28px 32px 60px;
+  max-width: 1100px;
+}
+
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px; padding-bottom: 14px;
+  border-bottom: 2px solid var(--rule);
+}
+.topbar h1 { margin: 0; font-size: 24px; }
+.topbar .who { font-size: 13px; color: var(--ink-soft); text-align: right; }
+.topbar .who b { color: var(--ink); }
+
+/* ---- Tabs (for pages without sidebar, eg login) ---- */
+.tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.tab {
+  padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--paper-line); background: var(--card);
+  font-size: 14px; color: var(--ink-soft);
+}
+.tab.active { border-color: var(--rule); color: var(--rule); font-weight: 600; background: var(--clay-bg); }
+
+/* ---- Cards & Tables ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card h2 { font-size: 17px; margin: 0 0 14px; display:flex; align-items:center; gap:8px;}
+.card h2::before { content: ''; width: 4px; height: 18px; background: var(--rule); border-radius: 2px; display:inline-block;}
+
+.grid { display: grid; gap: 16px; }
+.grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) { .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
+
+.stat {
+  background: var(--card); border: 1px solid var(--paper-line);
+  border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow);
+}
+.stat .num { font-family: 'Tiro Bangla', serif; font-size: 26px; color: var(--rule); }
+.stat .lbl { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  text-align: right; padding: 8px 10px; color: var(--ink-soft);
+  border-bottom: 2px solid var(--rule); font-weight: 600; font-size: 13px;
+}
+th:first-child, td:first-child { text-align: right; }
+td { padding: 9px 10px; border-bottom: 1px dashed var(--paper-line); }
+tr:hover td { background: rgba(180,68,58,0.04); }
+
+.badge { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display:inline-block; }
+.badge.paid { background: var(--sage-bg); color: var(--sage); }
+.badge.due { background: var(--clay-bg); color: var(--clay); }
+.badge.partial { background: #F6EAD2; color: var(--gold); }
+.badge.pending { background: #EFEAF5; color: #6A5A9C; }
+.badge.done { background: var(--sage-bg); color: var(--sage); }
+.badge.missed { background: var(--clay-bg); color: var(--clay); }
+
+/* ---- Forms ---- */
+input, select, textarea, button {
+  font-family: 'Hind Siliguri', sans-serif; font-size: 14px;
+}
+input, select, textarea {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--paper-line);
+  border-radius: 7px; background: #fff; color: var(--ink);
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--rule); }
+label { font-size: 13px; color: var(--ink-soft); display: block; margin-bottom: 5px; }
+.field { margin-bottom: 14px; }
+
+button.btn {
+  padding: 10px 20px; border-radius: 7px; border: none; cursor: pointer;
+  background: var(--rule); color: #fff; font-weight: 600;
+  transition: background .15s, transform .1s;
+}
+button.btn:hover { background: #96362d; }
+button.btn:active { transform: scale(0.98); }
+button.btn.secondary { background: transparent; color: var(--rule); border: 1.5px solid var(--rule); }
+button.btn.gold { background: var(--gold); }
+button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row.between { justify-content: space-between; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--ink-soft); }
+.empty .icon { font-size: 36px; margin-bottom: 10px; }
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 999px;
+  font-size: 14px; box-shadow: var(--shadow); z-index: 999; opacity: 0;
+  transition: opacity .2s, transform .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+/* ---- Chat ---- */
+.chat-window { height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 6px; }
+.msg { max-width: 70%; padding: 9px 13px; border-radius: 12px; font-size: 14px; }
+.msg .meta { font-size: 11px; color: var(--ink-soft); margin-bottom: 3px; }
+.chat-del-btn { background: none; border: none; cursor: pointer; font-size: 11px; opacity: 0.5; padding: 0 2px; }
+.chat-del-btn:hover { opacity: 1; }
+.msg.mine { align-self: flex-start; background: var(--clay-bg); border-bottom-right-radius: 3px; }
+.msg.other { align-self: flex-end; background: var(--sage-bg); border-bottom-left-radius: 3px; }
+.msg img, .msg audio { max-width: 100%; border-radius: 8px; margin-top: 4px; }
+
+/* ---- Login page ---- */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-card { max-width: 380px; width: 100%; background: var(--card); border: 1px solid var(--paper-line);
+  border-radius: 14px; padding: 36px 30px; box-shadow: var(--shadow); text-align: center; }
+.login-card .stamp {
+  width: 64px; height: 64px; border: 3px solid var(--rule); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+  font-family: 'Tiro Bangla', serif; font-size: 26px; color: var(--rule); transform: rotate(-6deg);
+}
+.login-card h1 { font-size: 22px; margin: 0 0 4px; }
+.login-card p.sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 22px; }
+
+@media (max-width: 640px) {
+  .sidebar { flex-direction: row; width: 100%; height: 60px; top: auto; bottom: 0; padding: 0 8px; justify-content: space-around; }
+  .sidebar .logo { display: none; }
+  .main { margin-left: 0; margin-bottom: 60px; padding: 18px 16px 40px; }
+}
